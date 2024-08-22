@@ -73,6 +73,7 @@ import Choice from "./components/Choice";
 import NumberComponent from "./components/Number";
 import Integer from "./components/Integer";
 import Graph from "./components/Graph";
+import DiscreteGraph from "./components/DiscreteGraph";
 import Function from "./components/Function";
 import PiecewiseFunction from "./components/PiecewiseFunction";
 import Interval from "./components/Interval";
@@ -270,6 +271,7 @@ const componentTypeArray = [
     NumberComponent,
     Integer,
     Graph,
+    DiscreteGraph,
     Function,
     PiecewiseFunction,
     Interval,
