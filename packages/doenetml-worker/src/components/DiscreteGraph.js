@@ -1275,6 +1275,8 @@ export default class DiscreteGraph extends GraphicalComponent {
         sourceInformation = {},
         skipRendererUpdate = false,
     }) {
+        console.log(pointCoords);
+
         let numVerticesMoved = Object.keys(pointCoords).length;
 
         if (numVerticesMoved === 1) {
@@ -1295,8 +1297,8 @@ export default class DiscreteGraph extends GraphicalComponent {
             vertexComponents[ind + ",1"] = me.fromAst(pointCoords[ind][1]);
         }
 
-        // Note: we set skipRendererUpdate to true
-        // so that we can make further adjustments before the renderers are updated
+        console.log(vertexComponents);
+
         if (transient) {
             await this.coreFunctions.performUpdate({
                 updateInstructions: [
@@ -1311,7 +1313,7 @@ export default class DiscreteGraph extends GraphicalComponent {
                 transient,
                 actionId,
                 sourceInformation,
-                skipRendererUpdate: true,
+                skipRendererUpdate,
             });
         } else {
             await this.coreFunctions.performUpdate({
@@ -1326,7 +1328,7 @@ export default class DiscreteGraph extends GraphicalComponent {
                 ],
                 actionId,
                 sourceInformation,
-                skipRendererUpdate: true,
+                skipRendererUpdate,
                 event: {
                     verb: "interacted",
                     object: {
@@ -1346,8 +1348,11 @@ export default class DiscreteGraph extends GraphicalComponent {
         // This procedure may preserve the rigid/similarity transformation
         // even if a subset of the vertices are constrained.
         // Note: If desiredUnconstrainedVertices has null components, then the original update was not successful.
+        
+        /* 
         let desiredUnconstrainedVertices =
             await this.stateValues.desiredUnconstrainedVertices;
+        console.log(desiredUnconstrainedVertices);
         if (
             (numVerticesMoved > 1) &&
             desiredUnconstrainedVertices[0][0] != null
@@ -1452,15 +1457,15 @@ export default class DiscreteGraph extends GraphicalComponent {
                     });
                 }
             }
-        }
+        } */
 
         // if no modifications were made, still need to update renderers
         // as original update was performed with skipping renderer update
-        return await this.coreFunctions.updateRenderers({
+        /* return await this.coreFunctions.updateRenderers({
             actionId,
             sourceInformation,
             skipRendererUpdate,
-        });
+        }); */
     }
 
     async finalizeDiscreteGraphPosition({

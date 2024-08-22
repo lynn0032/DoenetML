@@ -155,11 +155,11 @@ export default React.memo(function DiscreteGraph(props) {
         //add event handlers to points
         for (let i = 0; i < SVs.numVertices; i++) {
             pointsJXG.current[i].on("drag", (e) => pointDragHandler(i, e));
-            //pointsJXG.current[i].on("up", () => upHandler(i));
-            //pointsJXG.current[i].on("keyfocusout", () => keyFocusOutHandler(i));
-            //pointsJXG.current[i].on("keydown", (e) => keyDownHandler(i, e));
+            pointsJXG.current[i].on("up", () => upHandler(i));
+            pointsJXG.current[i].on("keyfocusout", () => keyFocusOutHandler(i));
+            pointsJXG.current[i].on("keydown", (e) => keyDownHandler(i, e));
             pointsJXG.current[i].on("down", (e) => downHandler(i, e));
-            //pointsJXG.current[i].on("hit", (e) => hitHandler());
+            pointsJXG.current[i].on("hit", (e) => hitHandler());
         }
 
         // create edges
@@ -205,11 +205,11 @@ export default React.memo(function DiscreteGraph(props) {
         // add event handlers to edges - Write separate handler functions for edges
         for (let i = 0; i < SVs.numEdges; i++) {
             edgesJXG.current[i].on("drag", (e) => edgeDragHandler(i, e));
-            // edgesJXG.current[i].on("up", () => upHandler(-1));
-            // edgesJXG.current[i].on("keyfocusout", () => keyFocusOutHandler(-1));
-            // edgesJXG.current[i].on("keydown", (e) => keyDownHandler(-1, e));
+            edgesJXG.current[i].on("up", () => upHandler(-1));
+            edgesJXG.current[i].on("keyfocusout", () => keyFocusOutHandler(-1));
+            edgesJXG.current[i].on("keydown", (e) => keyDownHandler(-1, e));
             edgesJXG.current[i].on("down", (e) => downHandler(-1, e));
-            // edgesJXG.current[i].on("hit", (e) => hitHandler());
+            edgesJXG.current[i].on("hit", (e) => hitHandler());
             // edgesJXG.current[i].on("over", (e) => {
             //     highlightVertices();
             // });
@@ -267,6 +267,8 @@ export default React.memo(function DiscreteGraph(props) {
         edgesJXG.current = null;
     }
 
+    // TO DO: edit so puts points back in original position, so not updated until after core figures them out
+   
     function pointDragHandler(i, e) {
         let viaPointer = e.type === "pointermove";
 
@@ -382,9 +384,12 @@ export default React.memo(function DiscreteGraph(props) {
         }
     }
 
+    // TO DO: edit so puts points back in original position, so not updated until after core figures them out
     function edgeDragHandler(i, e) {
         let viaPointer = e.type === "pointermove";
         let edge = SVs.edges[i];
+
+        console.log(viaPointer);
 
         if (
             !viaPointer ||
@@ -415,14 +420,16 @@ export default React.memo(function DiscreteGraph(props) {
                 }
             } else {
                 pointCoords.current[edge[0] - 1] = [
-                    edgesJXG[i].current.point1.X(),
-                    edgesJXG[i].current.point1.Y(),
+                    edgesJXG.current[i].point1.X(),
+                    edgesJXG.current[i].point1.Y(),
                 ];
                 pointCoords.current[edge[1] - 1] = [
-                    edgesJXG[i].current.point2.X(),
-                    edgesJXG[i].current.point2.Y(),
+                    edgesJXG.current[i].point2.X(),
+                    edgesJXG.current[i].point2.Y(),
                 ];
             }
+
+            console.log(pointCoords.current);
 
             callAction({
                 action: actions.moveDiscreteGraph,
@@ -561,7 +568,7 @@ export default React.memo(function DiscreteGraph(props) {
     }
 
     function hitHandler() {
-        highlightVertices();
+        //highlightVertices();
         draggedPoint.current = null;
         callAction({
             action: actions.discreteGraphFocused,
@@ -607,7 +614,7 @@ export default React.memo(function DiscreteGraph(props) {
     }
 
     function keyFocusOutHandler(i) {
-        unHighlightVertices();
+        //unHighlightVertices();
         if (draggedPoint.current === i) {
             if (i === -1) {
                 callAction({
@@ -766,19 +773,24 @@ export default React.memo(function DiscreteGraph(props) {
 
             previousNumVertices.current = SVs.numVertices;
 
-            //discretegraphJXG.current.updateTransformMatrix();
-            //let shiftX = discretegraphJXG.current.transformMat[1][0];
-            //let shiftY = discretegraphJXG.current.transformMat[2][0];
 
             for (let i = 0; i < SVs.numVertices; i++) {
                 // this will actually move points (might have drag reset to old, to make sure points are valid first)
                 pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
                     ...SVs.numericalVertices[i],
                 ]);
-                //     discretegraphJXG.current.dataX[i] =
-                //         SVs.numericalVertices[i][0] - shiftX;
-                //     discretegraphJXG.current.dataY[i] =
-                //         SVs.numericalVertices[i][1] - shiftY;
+            }
+
+            //TO DO: update so that edges don't overlap with vertices
+            for (let i = 0; i < SVs.numEdges; i++) {
+                edgesJXG.current[i].point1.coords.setCoordinates(
+                    JXG.COORDS_BY_USER,
+                    SVs.numericalVertices[SVs.edges[i][0]-1],
+                );
+                edgesJXG.current[i].point2.coords.setCoordinates(
+                    JXG.COORDS_BY_USER,
+                    SVs.numericalVertices[SVs.edges[i][1]-1],
+                );
             }
 
             let visible = !SVs.hidden;
@@ -875,6 +887,13 @@ export default React.memo(function DiscreteGraph(props) {
                 // }
                 pointsJXG.current[i].needsUpdate = true;
                 pointsJXG.current[i].update();
+            }
+            for (let i = 0; i < SVs.numEdges; i++) {
+                // if (layerChanged) {
+                //     pointsJXG.current[i].setAttribute({ layer: pointLayer });
+                // }
+                edgesJXG.current[i].needsUpdate = true;
+                edgesJXG.current[i].update();
             }
             board.updateRenderer();
         }
