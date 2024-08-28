@@ -8,8 +8,6 @@ export default React.memo(function DiscreteGraph(props) {
     let { name, id, SVs, actions, sourceOfUpdate, callAction } =
         useDoenetRenderer(props);
 
-    //console.log(SVs);
-
     DiscreteGraph.ignoreActionsWithoutCore = () => true;
 
     const board = useContext(BoardContext);
@@ -134,8 +132,6 @@ export default React.memo(function DiscreteGraph(props) {
             jsxDiscreteGraphAttributes.label.strokeColor = "var(--canvastext)";
         }
 
-        //console.log(jsxPointAttributes.current);
-
         // create vertices
         pointsJXG.current = [];
         for (let i = 0; i < SVs.numVertices; i++) {
@@ -177,19 +173,19 @@ export default React.memo(function DiscreteGraph(props) {
             let newX0 =
                 x0 +
                 ((jsxPointAttributes.current.size / board.unitX) * (x1 - x0)) /
-                    vectorLength;
+                vectorLength;
             let newY0 =
                 y0 +
                 ((jsxPointAttributes.current.size / board.unitY) * (y1 - y0)) /
-                    vectorLength;
+                vectorLength;
             let newX1 =
                 x1 +
                 ((jsxPointAttributes.current.size / board.unitX) * (x0 - x1)) /
-                    vectorLength;
+                vectorLength;
             let newY1 =
                 y1 +
                 ((jsxPointAttributes.current.size / board.unitY) * (y0 - y1)) /
-                    vectorLength;
+                vectorLength;
             edgesJXG.current.push(
                 board.create(
                     "segment",
@@ -202,7 +198,7 @@ export default React.memo(function DiscreteGraph(props) {
             );
         }
 
-        // add event handlers to edges - Write separate handler functions for edges
+        // add event handlers to edges
         for (let i = 0; i < SVs.numEdges; i++) {
             edgesJXG.current[i].on("drag", (e) => edgeDragHandler(i, e));
             edgesJXG.current[i].on("up", () => upHandler(-1));
@@ -267,8 +263,6 @@ export default React.memo(function DiscreteGraph(props) {
         edgesJXG.current = null;
     }
 
-    // TO DO: edit so puts points back in original position, so not updated until after core figures them out
-   
     function pointDragHandler(i, e) {
         let viaPointer = e.type === "pointermove";
 
@@ -293,9 +287,7 @@ export default React.memo(function DiscreteGraph(props) {
                     sourceDetails: { vertex: i },
                 },
             });
-            pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
-                ...lastPositionsFromCore.current[i],
-            ]);
+
             // search through edges for those including this point
             // may want to change this for efficiency later
             for (let j = 0; j < SVs.numEdges; j++) {
@@ -313,22 +305,22 @@ export default React.memo(function DiscreteGraph(props) {
                         x0 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x1 - x0)) /
-                            vectorLength;
+                        vectorLength;
                     let newY0 =
                         y0 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y1 - y0)) /
-                            vectorLength;
+                        vectorLength;
                     let newX1 =
                         x1 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x0 - x1)) /
-                            vectorLength;
+                        vectorLength;
                     let newY1 =
                         y1 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y0 - y1)) /
-                            vectorLength;
+                        vectorLength;
                     edgesJXG.current[j].point1.coords.setCoordinates(
                         JXG.COORDS_BY_USER,
                         [newX0, newY0],
@@ -352,22 +344,22 @@ export default React.memo(function DiscreteGraph(props) {
                         x0 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x1 - x0)) /
-                            vectorLength;
+                        vectorLength;
                     let newY0 =
                         y0 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y1 - y0)) /
-                            vectorLength;
+                        vectorLength;
                     let newX1 =
                         x1 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x0 - x1)) /
-                            vectorLength;
+                        vectorLength;
                     let newY1 =
                         y1 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y0 - y1)) /
-                            vectorLength;
+                        vectorLength;
                     edgesJXG.current[j].point1.coords.setCoordinates(
                         JXG.COORDS_BY_USER,
                         [newX0, newY0],
@@ -380,16 +372,18 @@ export default React.memo(function DiscreteGraph(props) {
                     board.updateInfobox(edgesJXG.current[j].point2);
                 }
             }
+
+            pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
+                ...lastPositionsFromCore.current[i],                // DONE?: edit so puts points back in original position, so not updated until after core figures them out.
+            ]);
+            //TO DO: edges back to old position?
             board.updateInfobox(pointsJXG.current[i]);
         }
     }
 
-    // TO DO: edit so puts points back in original position, so not updated until after core figures them out
     function edgeDragHandler(i, e) {
         let viaPointer = e.type === "pointermove";
         let edge = SVs.edges[i];
-
-        console.log(viaPointer);
 
         if (
             !viaPointer ||
@@ -429,8 +423,6 @@ export default React.memo(function DiscreteGraph(props) {
                 ];
             }
 
-            console.log(pointCoords.current);
-
             callAction({
                 action: actions.moveDiscreteGraph,
                 args: {
@@ -440,9 +432,7 @@ export default React.memo(function DiscreteGraph(props) {
                     sourceDetails: { vertex: i },
                 },
             });
-            pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
-                ...lastPositionsFromCore.current[i],
-            ]);
+
             // search through edges to update
             // may want to change this for efficiency later
             for (let j = 0; j < SVs.numEdges; j++) {
@@ -461,22 +451,22 @@ export default React.memo(function DiscreteGraph(props) {
                         x0 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x1 - x0)) /
-                            vectorLength;
+                        vectorLength;
                     let newY0 =
                         y0 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y1 - y0)) /
-                            vectorLength;
+                        vectorLength;
                     let newX1 =
                         x1 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x0 - x1)) /
-                            vectorLength;
+                        vectorLength;
                     let newY1 =
                         y1 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y0 - y1)) /
-                            vectorLength;
+                        vectorLength;
                     edgesJXG.current[j].point1.coords.setCoordinates(
                         JXG.COORDS_BY_USER,
                         [newX0, newY0],
@@ -505,22 +495,22 @@ export default React.memo(function DiscreteGraph(props) {
                         x0 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x1 - x0)) /
-                            vectorLength;
+                        vectorLength;
                     let newY0 =
                         y0 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y1 - y0)) /
-                            vectorLength;
+                        vectorLength;
                     let newX1 =
                         x1 +
                         ((jsxPointAttributes.current.size / board.unitX) *
                             (x0 - x1)) /
-                            vectorLength;
+                        vectorLength;
                     let newY1 =
                         y1 +
                         ((jsxPointAttributes.current.size / board.unitY) *
                             (y0 - y1)) /
-                            vectorLength;
+                        vectorLength;
                     edgesJXG.current[j].point1.coords.setCoordinates(
                         JXG.COORDS_BY_USER,
                         [newX0, newY0],
@@ -534,6 +524,10 @@ export default React.memo(function DiscreteGraph(props) {
                     board.updateInfobox(pointsJXG.current[i]);
                 }
             }
+            pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
+                ...lastPositionsFromCore.current[i],        // DONE?: edit so puts points back in original position, so not updated until after core figures them out
+            ]);
+            //TO DO: edges back to old position?
         }
     }
 
@@ -775,7 +769,7 @@ export default React.memo(function DiscreteGraph(props) {
 
 
             for (let i = 0; i < SVs.numVertices; i++) {
-                // this will actually move points (might have drag reset to old, to make sure points are valid first)
+                // this will move points
                 pointsJXG.current[i].coords.setCoordinates(JXG.COORDS_BY_USER, [
                     ...SVs.numericalVertices[i],
                 ]);
@@ -783,13 +777,38 @@ export default React.memo(function DiscreteGraph(props) {
 
             //TO DO: update so that edges don't overlap with vertices
             for (let i = 0; i < SVs.numEdges; i++) {
+                let edge = SVs.edges[i];
+                //compute coords so that edge doesn't overlap with points
+                let x0 = pointsJXG.current[edge[0] - 1].X();
+                let y0 = pointsJXG.current[edge[0] - 1].Y();
+                let x1 = pointsJXG.current[edge[1] - 1].X();
+                let y1 = pointsJXG.current[edge[1] - 1].Y();
+                let vectorLength = Math.sqrt(
+                    (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0),
+                );
+                let newX0 =
+                    x0 +
+                    ((jsxPointAttributes.current.size / board.unitX) * (x1 - x0)) /
+                    vectorLength;
+                let newY0 =
+                    y0 +
+                    ((jsxPointAttributes.current.size / board.unitY) * (y1 - y0)) /
+                    vectorLength;
+                let newX1 =
+                    x1 +
+                    ((jsxPointAttributes.current.size / board.unitX) * (x0 - x1)) /
+                    vectorLength;
+                let newY1 =
+                    y1 +
+                    ((jsxPointAttributes.current.size / board.unitY) * (y0 - y1)) /
+                    vectorLength;
                 edgesJXG.current[i].point1.coords.setCoordinates(
                     JXG.COORDS_BY_USER,
-                    SVs.numericalVertices[SVs.edges[i][0]-1],
+                    [newX0, newY0],
                 );
                 edgesJXG.current[i].point2.coords.setCoordinates(
                     JXG.COORDS_BY_USER,
-                    SVs.numericalVertices[SVs.edges[i][1]-1],
+                    [newX1, newY1],
                 );
             }
 
