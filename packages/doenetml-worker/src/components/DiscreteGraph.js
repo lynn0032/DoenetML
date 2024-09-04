@@ -1297,7 +1297,7 @@ export default class DiscreteGraph extends GraphicalComponent {
             vertexComponents[ind + ",1"] = me.fromAst(pointCoords[ind][1]);
         }
 
-        console.log(vertexComponents);
+        //console.log(vertexComponents);
 
         if (transient) {
             await this.coreFunctions.performUpdate({

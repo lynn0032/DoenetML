@@ -264,6 +264,9 @@ export default React.memo(function DiscreteGraph(props) {
     }
 
     function pointDragHandler(i, e) {
+        console.log("called pointDragHandler");
+        console.log(i);
+
         let viaPointer = e.type === "pointermove";
 
         //Protect against very small unintended drags
@@ -702,7 +705,9 @@ export default React.memo(function DiscreteGraph(props) {
                 }
             }
 
-            //discretegraphJXG.current.visProp.fixed = fixed.current;
+            // need to iterate through and update EACH point and edge
+            //pointsJXG.current.visProp.fixed = fixed.current;
+            //edgesJXG.current.visProp.fixed = fixed.current;
             //discretegraphJXG.current.visProp.highlight = !fixLocation.current;
             //discretegraphJXG.current.isDraggable = !fixLocation.current;
 
@@ -716,7 +721,7 @@ export default React.memo(function DiscreteGraph(props) {
             //     jsxPointAttributes.current.layer = pointLayer;
             // }
 
-            // add or delete points as required and change data array size  --- WILL ALSO NEED FOR EDGES
+            // add or delete points as required and change data array size 
             if (SVs.numVertices > previousNumVertices.current) {
                 for (
                     let i = previousNumVertices.current;
@@ -724,9 +729,9 @@ export default React.memo(function DiscreteGraph(props) {
                     i++
                 ) {
                     let pointAttributes = { ...jsxPointAttributes.current };
-                    if (!vertexIndicesDraggable.current.includes(i)) {
-                        pointAttributes.visible = false;
-                    }
+                    // if (!vertexIndicesDraggable.current.includes(i)) {
+                    //     pointAttributes.visible = false;
+                    // }
                     pointsJXG.current.push(
                         board.create(
                             "point",
@@ -734,9 +739,8 @@ export default React.memo(function DiscreteGraph(props) {
                             pointAttributes,
                         ),
                     );
-                    //discretegraphJXG.current.dataX.length = SVs.numVertices;
 
-                    pointsJXG.current[i].on("drag", (e) => dragHandler(i, e));
+                    pointsJXG.current[i].on("drag", (e) => pointDragHandler(i, e));
                     pointsJXG.current[i].on("up", (e) => upHandler(i));
                     pointsJXG.current[i].on("down", (e) => downHandler(i, e));
                     pointsJXG.current[i].on("hit", (e) => hitHandler());
@@ -762,11 +766,12 @@ export default React.memo(function DiscreteGraph(props) {
                     pt.off("keydown");
                     board.removeObject(pt);
                 }
-                //discretegraphJXG.current.dataX.length = SVs.numVertices;
             }
 
             previousNumVertices.current = SVs.numVertices;
 
+            //TO DO: add or delete edges as required and change data array size 
+            // TO DO: add protections if edges are invalid
 
             for (let i = 0; i < SVs.numVertices; i++) {
                 // this will move points
@@ -775,7 +780,7 @@ export default React.memo(function DiscreteGraph(props) {
                 ]);
             }
 
-            //TO DO: update so that edges don't overlap with vertices
+            // move edges
             for (let i = 0; i < SVs.numEdges; i++) {
                 let edge = SVs.edges[i];
                 //compute coords so that edge doesn't overlap with points
