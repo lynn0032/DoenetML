@@ -14,6 +14,8 @@ export default React.memo(function DiscreteGraph(props) {
 
     let pointsJXG = useRef(null);
     let edgesJXG = useRef(null);
+    let edgesSVs = useRef(SVs.edges);
+    edgesSVs.current = SVs.edges;
 
     let pointCoords = useRef(null);
     let draggedPoint = useRef(null);
@@ -23,7 +25,9 @@ export default React.memo(function DiscreteGraph(props) {
     let pointerIsDown = useRef(false);
     let pointerMovedSinceDown = useRef(false);
     let previousNumVertices = useRef(null);
+    let previousNumEdges = useRef(null);
     let jsxPointAttributes = useRef(null);
+    let jsxEdgeAttributes = useRef(null);
 
     let lastPositionsFromCore = useRef(null);
     let fixed = useRef(false);
@@ -132,6 +136,11 @@ export default React.memo(function DiscreteGraph(props) {
             jsxDiscreteGraphAttributes.label.strokeColor = "var(--canvastext)";
         }
 
+        jsxEdgeAttributes.current = Object.assign(
+            {},
+            jsxDiscreteGraphAttributes,
+        );
+
         // create vertices
         pointsJXG.current = [];
         for (let i = 0; i < SVs.numVertices; i++) {
@@ -186,6 +195,7 @@ export default React.memo(function DiscreteGraph(props) {
                 y1 +
                 ((jsxPointAttributes.current.size / board.unitY) * (y0 - y1)) /
                 vectorLength;
+            let edgeAttributes = { ...jsxEdgeAttributes.current };
             edgesJXG.current.push(
                 board.create(
                     "segment",
@@ -193,7 +203,7 @@ export default React.memo(function DiscreteGraph(props) {
                         [newX0, newY0],
                         [newX1, newY1],
                     ],
-                    jsxDiscreteGraphAttributes,
+                    edgeAttributes,
                 ),
             );
         }
@@ -215,6 +225,7 @@ export default React.memo(function DiscreteGraph(props) {
         }
 
         previousNumVertices.current = SVs.numVertices;
+        previousNumEdges.current = SVs.numEdges;
 
         return;
     }
@@ -264,8 +275,6 @@ export default React.memo(function DiscreteGraph(props) {
     }
 
     function pointDragHandler(i, e) {
-        console.log("called pointDragHandler");
-        console.log(i);
 
         let viaPointer = e.type === "pointermove";
 
@@ -386,7 +395,7 @@ export default React.memo(function DiscreteGraph(props) {
 
     function edgeDragHandler(i, e) {
         let viaPointer = e.type === "pointermove";
-        let edge = SVs.edges[i];
+        let edge = edgesSVs.current[i];
 
         if (
             !viaPointer ||
@@ -439,7 +448,7 @@ export default React.memo(function DiscreteGraph(props) {
             // search through edges to update
             // may want to change this for efficiency later
             for (let j = 0; j < SVs.numEdges; j++) {
-                let currentEdge = SVs.edges[j];
+                let currentEdge = edgesSVs.current[j];
                 if (currentEdge[0] === edge[0] || currentEdge[0] === edge[1]) {
                     //compute coords so that edge doesn't overlap with points
                     let i = currentEdge[0] - 1;
@@ -770,7 +779,77 @@ export default React.memo(function DiscreteGraph(props) {
 
             previousNumVertices.current = SVs.numVertices;
 
-            //TO DO: add or delete edges as required and change data array size 
+            //add or delete edges as required and change data array size
+            if (SVs.numEdges > previousNumEdges.current) {
+                for (
+                    let i = previousNumEdges.current;
+                    i < SVs.numEdges;
+                    i++
+                ) {
+                    let edgeAttributes = { ...jsxEdgeAttributes.current };
+                    let edge = SVs.edges[i];
+                    //compute coords so that edge doesn't overlap with points
+                    let x0 = pointsJXG.current[edge[0] - 1].X();
+                    let y0 = pointsJXG.current[edge[0] - 1].Y();
+                    let x1 = pointsJXG.current[edge[1] - 1].X();
+                    let y1 = pointsJXG.current[edge[1] - 1].Y();
+                    let vectorLength = Math.sqrt(
+                        (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0),
+                    );
+                    let newX0 =
+                        x0 +
+                        ((jsxPointAttributes.current.size / board.unitX) * (x1 - x0)) /
+                        vectorLength;
+                    let newY0 =
+                        y0 +
+                        ((jsxPointAttributes.current.size / board.unitY) * (y1 - y0)) /
+                        vectorLength;
+                    let newX1 =
+                        x1 +
+                        ((jsxPointAttributes.current.size / board.unitX) * (x0 - x1)) /
+                        vectorLength;
+                    let newY1 =
+                        y1 +
+                        ((jsxPointAttributes.current.size / board.unitY) * (y0 - y1)) /
+                        vectorLength;
+                    edgesJXG.current.push(
+                        board.create(
+                            "segment",
+                            [
+                                [newX0, newY0],
+                                [newX1, newY1],
+                            ],
+                            edgeAttributes,         //TO DO: change to a separate attributes variable
+                        ),
+                    );
+
+                    edgesJXG.current[i].on("drag", (e) => edgeDragHandler(i, e));
+                    edgesJXG.current[i].on("up", () => upHandler(-1));
+                    edgesJXG.current[i].on("keyfocusout", () => keyFocusOutHandler(-1));
+                    edgesJXG.current[i].on("keydown", (e) => keyDownHandler(-1, e));
+                    edgesJXG.current[i].on("down", (e) => downHandler(-1, e));
+                    edgesJXG.current[i].on("hit", (e) => hitHandler());
+            
+                }
+            } else if (SVs.numEdges < previousNumEdges.current) {
+                for (
+                    let i = SVs.numEdges;
+                    i < previousNumEdges.current;
+                    i++
+                ) {
+                    let edge = edgesJXG.current.pop();
+                    edge.off("drag");
+                    edge.off("down");
+                    edge.off("hit");
+                    edge.off("up");
+                    edge.off("keyfocusout");
+                    edge.off("keydown");
+                    board.removeObject(edge);
+                }
+            }
+
+            previousNumEdges.current = SVs.numEdges;
+
             // TO DO: add protections if edges are invalid
 
             for (let i = 0; i < SVs.numVertices; i++) {
@@ -807,6 +886,7 @@ export default React.memo(function DiscreteGraph(props) {
                     y1 +
                     ((jsxPointAttributes.current.size / board.unitY) * (y0 - y1)) /
                     vectorLength;
+
                 edgesJXG.current[i].point1.coords.setCoordinates(
                     JXG.COORDS_BY_USER,
                     [newX0, newY0],

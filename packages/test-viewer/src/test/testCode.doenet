@@ -5,8 +5,12 @@
     <polyline vertices="(0,0) (2,2) (-1,5) (-5,1)" />
 </graph>
 
+<mathInput name="edgeInput">(1,2),(3,4)</mathInput>
+
+<mathList name="edges">$edgeInput</mathList>
+
 <graph size="small">
-  <discreteGraph name="dg" vertices="(0,0) (2,2) (-1,5) (-5,1)" edges="(1,2) (3,4)"/>
+  <discreteGraph name="dg" vertices="(0,0) (2,2) (-1,5) (-5,1)" edges="$edges.maths"/>
   <point>(6,6)</point>
 </graph>
 
